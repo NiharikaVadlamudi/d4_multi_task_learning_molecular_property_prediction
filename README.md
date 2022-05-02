@@ -19,6 +19,9 @@ For training the network :
 cd tdc_regression
 bash train_reg_model.sh 
 ```
+## Weights & Biases Page 
+A one-stop portal for observing current experiments :  
+[MTP Experiments ] (https://wandb.ai/amber1121/D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
