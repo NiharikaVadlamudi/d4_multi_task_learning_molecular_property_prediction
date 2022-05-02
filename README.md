@@ -1,2 +1,23 @@
-# d4_multi_task_learning_molecular_property_prediction
-Baseline Experiments for Multi-Task Molecular Property Prediction 
+# Multi Task Learning for Molecular Property Prediction
+
+Description : This repository will consist baseline experiments for Multi-Task Molecular Property Prediction on Harvard's TDC dataset . 
+
+## Installation
+Easy installation via [conda](https://www.anaconda.com/) : 
+```bash
+conda env create --file d4_mtp_env.yml --python=3.8 
+conda activate d4_mtp_env
+```
+
+## TDC Regression Tasks 
+A total of 6 tasks - Caco-2 , Lipophilicity , Solubility (AqSolDB) , PPBR , Acute Toxicity LD50 & Clearance (Hepatocyt) are catergorised under regression. To generate the datafiles ( train & test ) , run the following commands : 
+```bash
+cd tdc_regression
+bash reg_data_generation.sh 
+```
+For training the network : 
+```bash
+cd tdc_regression
+bash train_reg_model.sh 
+```
+
