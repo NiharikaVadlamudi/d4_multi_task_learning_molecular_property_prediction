@@ -8,7 +8,6 @@ Easy installation via [conda](https://www.anaconda.com/) :
 conda env create --file d4_mtp_env.yml --python=3.8 
 conda activate d4_mtp_env
 ```
-
 ## TDC Regression Tasks 
 A total of 6 tasks - Caco-2 , Lipophilicity , Solubility (AqSolDB) , PPBR , Acute Toxicity LD50 & Clearance (Hepatocyt) are catergorised under regression. To generate the datafiles ( train & test ) , run the following commands : 
 ```bash
@@ -20,4 +19,12 @@ For training the network :
 cd tdc_regression
 bash train_reg_model.sh 
 ```
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Please make sure to update tests as appropriate.
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
+
 
