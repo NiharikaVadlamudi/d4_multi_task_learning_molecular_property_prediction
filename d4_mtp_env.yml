@@ -1,0 +1,4 @@
+name: ENVNAME
+channels:
+  - defaults
+prefix: /Users/niharikavadlamudi/miniconda3/envs/ENVNAME
