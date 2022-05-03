@@ -34,7 +34,8 @@ bash train_clf_model.sh
 
 ## Weights & Biases Page 
 A one-stop portal for observing current experiments : 
-[ Regression MTP Experiments ](https://wandb.ai/amber1121/D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
+[ Regression MTP Experiments ](https://wandb.ai/amber1121/[CLF]%20D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
+[ Classification MTP Experiments ](https://wandb.ai/amber1121/[C]%20D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
