@@ -6,7 +6,7 @@ Description : This repository will consist baseline experiments for Multi-Task M
 Easy installation via [conda](https://www.anaconda.com/) : 
 ```bash
 conda env create --file d4_mtp.yml --python=3.9
-conda activate d4_mtp_env
+conda activate d4_mtp
 ```
 ## TDC Regression Tasks 
 A total of 6 tasks - Caco-2 , Lipophilicity , Solubility (AqSolDB) , PPBR , Acute Toxicity LD50 & Clearance (Hepatocyt) are catergorised under regression. To generate the datafiles ( train & test ) , run the following commands : 
