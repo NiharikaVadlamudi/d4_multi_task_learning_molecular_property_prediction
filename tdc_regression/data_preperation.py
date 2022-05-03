@@ -73,7 +73,19 @@ def molecularDictionary(dframe,dictformat=False):
         return dframe.T.to_dict('dict')
     else:
         return dframe.T.to_dict('list')
-
+    
+    
+# Data Normalisation (Regression Specific) 
+def z_score(df):
+    # copy the dataframe
+    df_std = df.copy()
+    # apply the z-score method
+    for column in df_std.columns:
+        if(str(column).find('y_')>0):
+            print('Entered column ! : {}'.format(column))
+            df_std[column] = (df_std[column] - df_std[column].mean()) / df_std[column].std()
+    return df_std
+    
 
 # Main Functions 
 
@@ -102,6 +114,7 @@ def datapreprocessing(name,group='ADMET'):
         df=df.dropna(inplace = False)
         df=df.drop('Drug_ID',axis=1,inplace=False)
         df['Drug']=df['Drug'].apply(convertSMILES)
+        df=z_score(df)
         df=df.set_index('Drug')
         df=df.rename(columns = {'Y':'y_{}'.format(name[0:3].lower())},inplace = False)
         df['family']=str(group)
