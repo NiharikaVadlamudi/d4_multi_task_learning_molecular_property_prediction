@@ -19,8 +19,22 @@ For training the network :
 cd tdc_regression
 bash train_reg_model.sh 
 ```
+
+## TDC Classification Tasks 
+A total of 4 tasks - Bioavailability,CYP P450 2D6 Inhibition,Ames Mutagenicity & hERG Blockers  are catergorised under classification. To generate the datafiles ( train & test ) , run the following commands : 
+```bash
+cd tdc_classification
+bash clf_data_generation.sh 
+```
+For training the network : 
+```bash
+cd tdc_classification
+bash train_clf_model.sh 
+```
+
 ## Weights & Biases Page 
-A one-stop portal for observing current experiments : [MTP Experiments ](https://wandb.ai/amber1121/D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
+A one-stop portal for observing current experiments : 
+[ Regression MTP Experiments ](https://wandb.ai/amber1121/D4%20Molecular%20Property%20Prediction?workspace=user-amber1121) 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
