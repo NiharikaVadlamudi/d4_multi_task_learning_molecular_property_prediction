@@ -5,7 +5,7 @@ Description : This repository will consist baseline experiments for Multi-Task M
 ## Installation
 Easy installation via [conda](https://www.anaconda.com/) : 
 ```bash
-conda env create --file d4_mtp_env.yml --python=3.8 
+conda env create --file d4_mtp.yml --python=3.9
 conda activate d4_mtp_env
 ```
 ## TDC Regression Tasks 
