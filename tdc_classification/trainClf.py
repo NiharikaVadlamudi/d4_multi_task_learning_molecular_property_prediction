@@ -249,7 +249,7 @@ class Trainer(object):
                             y_out_i= torch.argmax(y_out_i,axis=-1)
                             y_gnd_i=torch.argmax(y_gnd_i,axis=-1)
                             task_mask_i=taskMasks[:,:,i].reshape((self.batchSize,1)).float()
-                            acc_i = torch.multiply((y_out_i==y_gnd_i).float(),task_mask_i).sum()
+                            acc_i = (1/self.batchSize)*torch.multiply((y_out_i==y_gnd_i).float(),task_mask_i).sum()
                             task['acc'].append(acc_i.cpu().detach().numpy())
     
                     except Exception as exp : 
