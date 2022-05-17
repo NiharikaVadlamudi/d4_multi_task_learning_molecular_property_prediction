@@ -1,11 +1,10 @@
 # Libraries
-import os 
+import csv 
 import sys
 import csv 
 import json
 from random import shuffle
 import numpy as np
-from tqdm import tqdm
 
 # python imports
 import os
@@ -20,12 +19,12 @@ warnings.filterwarnings("ignore")
 # torch imports
 import torch
 import torch.optim as optim
-from torchmetrics.functional import accuracy,precision,recall,auc,mean_squared_error
-from torch.utils.data import DataLoader, Dataset
+from torchmetrics.functional import accuracy,precision,recall,auc,mean_squared_error,spearman_corrcoef
+from torch.utils.data import *
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # File Imports 
-from model import D4MP 
+from model2 import *
 from dataclass import * 
 
 
@@ -35,7 +34,7 @@ if torch.cuda.is_available():
     print('__CUDNN VERSION  : {} '.format(torch.backends.cudnn.version()))
     print('__Number CUDA Devices  : {}'.format(torch.cuda.device_count()))
     print('Allocated GPUs : {} , CPUs : {}'.format(torch.cuda.device_count(),os.cpu_count()))
-    device= torch.device("cuda:0")
+    device= torch.device("cpu")
       
 else:
     print('Allocated CPUs : {}'.format(os.cpu_count()))
@@ -43,18 +42,18 @@ else:
     print('Only CPU Allocation ..')
 print('--------------------------------------------------')
 
-
+taskList = ['caco','lipophilicity','aqsol','ppbr','tox','clearance']
 
 # Parser 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--project_name',default='reg_tdc_task',help='name of the project')
-    parser.add_argument('--wid',default=wandb.util.generate_id(),help='wid initialisatio')
-    parser.add_argument('--expdir',default='tdc_clf',help='experiment folder')
+    parser.add_argument('--wid',default=wandb.util.generate_id(),help='wid initialisation')
+    parser.add_argument('--expdir',default='tdc_reg',help='experiment folder')
     parser.add_argument('--mode',default='train',help='train/evaluate the model')
-    parser.add_argument('--ntasks',default=4,type=int,help='N Classification Tasks')
+    parser.add_argument('--ntasks',default=6,type=int,help='N Classification Tasks')
     parser.add_argument('--learningRate',default=0.01,type=float,help='initial learning rate')
-    parser.add_argument('--batchSize',default=16,type=int,help='batchsize for both test/train')
+    parser.add_argument('--batchSize',default=32,type=int,help='batchsize for both test/train')
     parser.add_argument('--maxEpochs',default=50,type=int,help='maximum epochs')
     parser.add_argument('--modelfile',default=None,help='Model Weight file path')
     args = parser.parse_args()
@@ -77,7 +76,7 @@ def create_folder(args):
         WANDB_ENTITY="amber1121"
         os.environ["WANDB_RESUME"] ="allow"
         os.environ["WANDB_RUN_ID"] = args.wid
-        wandb.init(project="[CLF] D4 Molecular Property Prediction",id=args.wid,resume='allow',config=args)
+        wandb.init(project="[Reg] D4 Molecular Property Prediction",id=args.wid,resume='allow',config=args)
         print('WandB login completed ..')
 
     except Exception as ex : 
@@ -102,7 +101,8 @@ class Trainer(object):
         create_folder(args)
 
         # Model Initialisation 
-        self.model=D4MP()
+        #self.model=D4MP()
+        self.model=ANYA()
         self.model.to(device)
 
         # Specify the data csv files  
@@ -122,8 +122,8 @@ class Trainer(object):
             self.model.parameters(),
             lr=args.learningRate,
             amsgrad=False)
-        self.lr_decay = optim.lr_scheduler.StepLR(self.optimizer,step_size=5,gamma=0.1)
-
+        # self.lr_decay = optim.lr_scheduler.StepLR(self.optimizer,step_size=3,gamma=0.1)
+        self.lr_decay = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.1, patience=5, threshold=0.001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
         # Loss function 
         self.reg_loss_fn=torch.nn.MSELoss(reduce=False)
 
@@ -155,7 +155,7 @@ class Trainer(object):
     def loop(self):
         for epoch in range(0,self.maxEpochs):
             self.epoch = epoch
-            self.lr_decay.step()
+            # self.lr_decay.step()
             wandb.log({'current_lr':self.optimizer.param_groups[0]['lr'],'epoch':self.epoch})
             self.train(epoch)
             print('Epoch : {} ---- Instances Length : {} '.format(self.epoch,len(self.train_loader)))
@@ -169,7 +169,8 @@ class Trainer(object):
         running_loss = []
         print('Train Epoch : {}'.format(epoch))
         for step,samples in enumerate(self.train_loader):
-            # try:
+            try:
+                self.optimizer.zero_grad()
                 drug_graphs=samples[0]
                 taskMasks=torch.tensor((samples[1])).reshape((self.batchSize,1,self.ntasks)).to(device).float()
                 labels=torch.tensor(samples[2]).to(device).float()
@@ -181,14 +182,15 @@ class Trainer(object):
                 loss.backward()
                 self.optimizer.step()
                 running_loss.append(loss.cpu().detach().numpy())
-                # except Exception as exp : 
-                #     countErr=countErr+1
-                #     print('TrainException : {} Errors : {}'.format(exp,countErr))
-                #     continue
+            except Exception as exp : 
+                countErr=countErr+1
+                print('TrainException : {} Errors : {}'.format(exp,countErr))
+                continue
                 
 
         # Validation 
         metrics_dict,val_loss=self.validate(epoch)
+        self.lr_decay.step(val_loss)
 
         print('\n')
         print('Epoch : {}'.format(epoch))
@@ -203,8 +205,8 @@ class Trainer(object):
         wandb.log({'train_data_errors':countErr,'epoch':epoch})
         wandb.log({'avg_validation_error':val_loss,'epoch':epoch})
         for i in range(self.ntasks):
-            for key in metrics_dict['task_'+str(i)].keys():
-                wandb.log({'task{}_{}'.format(i,key):metrics_dict['task_'+str(i)][key],'epoch':epoch})
+            for key in metrics_dict['task_'+str(taskList[i])].keys():
+                wandb.log({'task_{}_{}'.format(str(taskList[i]),key):metrics_dict['task_'+str(taskList[i])][key],'epoch':epoch})
 
         # Save model checkpoint ..
         self.save_checkpoint(self.epoch)
@@ -237,6 +239,7 @@ class Trainer(object):
                     epoch_loss.append(loss.cpu().detach().numpy())
 
                     # Metrics 
+                    spcCoeff=[]
                     for i,task in enumerate(tasks):
                         # taskmask tho malli we need to multiply or do only if taskMask = 1 
                         y_out_i=y_out[:,:,i].reshape((self.batchSize,1,1)).float()
@@ -248,7 +251,11 @@ class Trainer(object):
                         y_out_i=torch.multiply(y_out_i,task_mask_i)
                         y_gnd_i=torch.multiply(y_gnd_i,task_mask_i)
                         mse_loss_i = mean_squared_error(y_out_i,y_gnd_i)
-                    
+
+                        if(i==5):
+                            val = spearman_corrcoef(y_out_i,y_gnd_i)
+                            spcCoeff.append(val)
+                            
                         # Metrics
                         task['mse'].append(mse_loss_i.cpu().detach().numpy())
 
@@ -257,18 +264,19 @@ class Trainer(object):
                     continue
 
             # Final Metrics
+            spcCoeff=np.mean(np.asarray(spcCoeff,dtype=np.float))
             metrics=['mse']
             finalDict={}
             for i,task in enumerate(tasks):
-                finalDict['task_'+str(i)]={}
+                finalDict['task_'+str(taskList[i])]={}
                 for metric in metrics :
-                    finalDict['task_'+str(i)][metric]=np.mean(np.asarray(task[metric],dtype=np.float))
+                    finalDict['task_'+str(taskList[i])][metric]=np.mean(np.asarray(task[metric],dtype=np.float))
             
             # Net loss 
             net_loss = np.mean(np.array(epoch_loss,dtype=np.float).flatten())
             # WandB logging 
             wandb.log({'validation_data_errors':errorPoints,'epoch':epoch})
-            
+            wandb.log({'spearman coefficient [clearance]':spcCoeff,'epoch':epoch})
             return(finalDict,net_loss)
 
 
