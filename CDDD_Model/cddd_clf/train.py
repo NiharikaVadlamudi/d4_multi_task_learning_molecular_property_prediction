@@ -63,7 +63,7 @@ def get_args():
     parser.add_argument('--wid',default=wandb.util.generate_id(),help='wid initialisation')
     parser.add_argument('--expdir',default='tdc_reg',help='experiment folder')
     parser.add_argument('--mode',default='train',help='train/evaluate the model')
-    parser.add_argument('--ntasks',default=4,type=int,help='N Classification Tasks')
+    parser.add_argument('--ntasks',default=1,type=int,help='N Classification Tasks')
     parser.add_argument('--learningRate',default=0.01,type=float,help='initial learning rate')
     parser.add_argument('--trainbatchSize',default=32,type=int,help='batchsize for train')
     parser.add_argument('--valbatchSize',default=256,type=int,help='batchsize for val')
@@ -120,8 +120,8 @@ class Trainer(object):
 
         # Specify the data csv files  
         
-        train_df = pd.read_csv('./data/final_clf_train_descriptors.csv')
-        valid_df = pd.read_csv('./data/final_clf_test_descriptors.csv')
+        train_df = pd.read_csv('./data/cddd_reg_task_aqsol_train.csv')
+        valid_df = pd.read_csv('./data/cddd_reg_task_aqsol_test.csv')
 
         # Converting Dataframes to Dataclass 
         train_dataset = Dataclass(train_df)
@@ -171,7 +171,6 @@ class Trainer(object):
     
 
     def loop(self):
-        
         for epoch in range(self.epoch,self.maxEpochs):
             self.epoch = epoch
             wandb.log({'current_lr':self.optimizer.param_groups[0]['lr'],'epoch':self.epoch})
